@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Gerador de scripts de configuração para roteadores MikroTik com padrão Perfill e túnel IPsec FortiGate.">
+  <title>Gerador MikroTik | Perfill Tecnologia</title>
+  
+  <!-- Estilos desacoplados -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <!-- Cabeçalho -->
+    <header class="top">
+      <div class="logo-badge" aria-hidden="true">M</div>
+      <div>
+        <div class="eyebrow">
+          <span>Perfill Tecnologia</span>
+          <span class="badge-tag">API v1.0</span>
+        </div>
+        <h1>Gerador de scripts MikroTik</h1>
+        <p class="subtitle">
+          Informe o IP da câmera, configure o tipo de conexão WAN e exporte os arquivos de configuração (.rsc e .txt) prontos para importar na RB.
+        </p>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="layout">
+      <!-- Painel 1: Formulário de Entrada -->
+      <section class="panel" aria-labelledby="step1-title">
+        <div class="panel-header">
+          <h2 id="step1-title">
+            <span class="step-num">1</span> Dados do ponto
+          </h2>
+        </div>
+
+        <form id="generatorForm">
+          <div class="field">
+            <label for="siteName">Nome / identificação do ponto (opcional)</label>
+            <input 
+              id="siteName" 
+              name="siteName" 
+              maxlength="70" 
+              placeholder="Ex.: Câmera portaria 01"
+            >
+          </div>
+
+          <div class="field">
+            <label for="cameraIp">IP da câmera</label>
+            <input 
+              id="cameraIp" 
+              name="cameraIp" 
+              inputmode="decimal" 
+              value="10.98.45.38" 
+              placeholder="10.98.45.38" 
+              required
+            >
+            <div class="hint">Padrão /30: o IP informado deve ser o segundo host utilizável. O gateway da RB será o host anterior.</div>
+          </div>
+
+          <div class="field">
+            <label>Tipo de conexão WAN</label>
+            <div class="radio-row" role="radiogroup">
+              <label class="radio-card">
+                <input type="radio" name="wanType" value="DHCP" checked>
+                <span>
+                  <strong>DHCP</strong>
+                  <small>IP automático na interface WAN</small>
+                </span>
+              </label>
+
+              <label class="radio-card">
+                <input type="radio" name="wanType" value="PPPoE">
+                <span>
+                  <strong>PPPoE</strong>
+                  <small>Autenticação usuário e senha</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Campos condicionais para PPPoE -->
+          <div id="pppoeFields" class="hidden">
+            <div class="field">
+              <label for="pppoeUser">Usuário PPPoE</label>
+              <input id="pppoeUser" name="pppoeUser" autocomplete="off" placeholder="Usuário fornecido pela operadora">
+            </div>
+            <div class="field">
+              <label for="pppoePass">Senha PPPoE</label>
+              <input id="pppoePass" name="pppoePass" type="password" autocomplete="new-password" placeholder="Senha da operadora">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="wanInterface">Interface WAN</label>
+            <select id="wanInterface" name="wanInterface">
+              <option value="ether1" selected>ether1</option>
+              <option value="ether2">ether2</option>
+              <option value="ether3">ether3</option>
+              <option value="ether4">ether4</option>
+              <option value="ether5">ether5</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="lanPorts">Portas LAN na bridge</label>
+            <input id="lanPorts" name="lanPorts" value="ether2,ether3,ether4,ether5">
+            <div class="hint">Separadas por vírgula. Não inclua a interface WAN.</div>
+          </div>
+
+          <div class="field">
+            <label for="routerVersion">Versão RouterOS (opcional, anotação)</label>
+            <input id="routerVersion" name="routerVersion" placeholder="Ex.: 6.49.13, 7.x ou deixe em branco">
+            <div class="hint">Não restringe o gerador a uma versão específica.</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" type="submit" id="submitBtn">
+              Gerar scripts
+            </button>
+            <button class="btn" type="button" id="clearBtn">
+              Limpar prévia
+            </button>
+          </div>
+        </form>
+
+        <div id="statusMsg" class="status-msg hidden" role="status" aria-live="polite"></div>
+        <div id="networkFacts" class="facts-grid hidden" aria-label="Informações de rede calculadas"></div>
+      </section>
+
+      <!-- Painel 2: Exportação e Prévia -->
+      <section class="panel" aria-labelledby="step2-title">
+        <div class="panel-header">
+          <h2 id="step2-title">
+            <span class="step-num">2</span> Exportar arquivos
+          </h2>
+        </div>
+        <p class="subtitle" style="margin-bottom: 16px;">
+          Segue o modelo de configuração oficial Perfill, com túnel IPsec FortiGate e regras de segurança.
+        </p>
+
+        <div class="filelist">
+          <div class="file-box">
+            <span class="badge-ext">RouterOS Script</span>
+            <strong>.rsc</strong>
+            <p>Arquivo de script para importar diretamente no terminal ou WinBox.</p>
+          </div>
+          <div class="file-box">
+            <span class="badge-ext">Texto Legível</span>
+            <strong>.txt</strong>
+            <p>Documento formatado para conferência, backup e arquivamento.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="downloadRsc" disabled>
+            Baixar .rsc
+          </button>
+          <button class="btn" id="downloadTxt" disabled>
+            Baixar .txt
+          </button>
+          <button class="btn" id="copyBtn" disabled>
+            Copiar script
+          </button>
+        </div>
+
+        <div class="preview-container">
+          <div class="field" style="margin-bottom: 0;">
+            <label for="preview">Prévia do script gerado</label>
+            <textarea 
+              id="preview" 
+              class="preview-area" 
+              readonly 
+              placeholder="Preencha os dados no passo 1 e clique em “Gerar scripts” para visualizar o resultado."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="notice-box">
+          <strong>Atenção operacional:</strong> O script destina-se a uma RouterBoard (RB) limpa (sem configurações conflitantes). Não altera o roteador automaticamente. Faça backup e garanta acesso de recuperação (ex: MAC WinBox) antes de importar o script.
+        </div>
+      </section>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="footer">
+      <span>Perfill Tecnologia</span>
+      <span class="dot"></span>
+      <span>Arquitetura desacoplada: Front-end + CSS + Back-end API</span>
+      <span class="dot"></span>
+      <span>Node.js / Express</span>
+    </footer>
+  </div>
+
+  <!-- Scripts desacoplados -->
+  <script src="js/app.js" defer></script>
+</body>
+</html>
